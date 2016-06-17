@@ -1,0 +1,7 @@
+lectures/
+silver/
+.idea/
+*.pyc
+*.class
+*.jar
+*.iml
