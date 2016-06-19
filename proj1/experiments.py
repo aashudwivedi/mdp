@@ -88,5 +88,9 @@ def exp_1():
     plt.show()
 
 
+def exp2():
+    pass
+
+
 if __name__ == '__main__':
     exp_1()

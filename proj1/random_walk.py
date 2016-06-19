@@ -64,17 +64,22 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
         :return: updated weights
     """
     N = len(X)
-    e = np.zeros((N, total_states))
 
-    pt = w.dot(X[0])
     dw = np.zeros(total_states)
-    e[0] = X[0]
+    e = np.zeros(total_states)
 
-    for i in range(N):
-        p_i = z[-1] if i == N - 1 else w.dot(X[i])
-        p_diff = (p_i - pt)
-        pt = p_i
-        e[i] = X[i] + lambda_val * e[i-1]
-        dw += alpha * p_diff * e[i]
+    for i in range(N - 1):
+        p = w.dot(X[i])
+
+        x_next = X[i+1]
+        p_next = z[-1] if i + 1 == N - 1 else w.dot(x_next)
+
+        p_diff = p_next - p
+
+        e_next = X[i] + lambda_val * e
+
+        dw += alpha * p_diff * e_next
+
+        e = e_next
 
     return w + dw
