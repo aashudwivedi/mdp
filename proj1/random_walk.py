@@ -89,10 +89,7 @@ def td_lambda(X, z, w,  alpha, lambda_val, total_states=5):
 
         # etrace calculation
         if i == 0:
-            try:
-                e[i] = X[i]
-            except ValueError:
-                import ipdb; ipdb.set_trace()
+            e[i] = X[i]
         else:
             e[i] = X[i] + lambda_val * e[i - 1]
 
