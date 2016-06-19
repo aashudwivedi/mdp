@@ -6,7 +6,9 @@ from random_walk import td_lambda
 from constants import MAX_STATES
 
 
-MAX_ITERATIONS = 100
+MAX_ITERATIONS = 1000
+
+TOLERANCE = 0.0001
 
 actual_z = [0, 1/6., 1/3., 1/2., 2/3., 5/6., 1.0]
 
@@ -20,17 +22,20 @@ def train_on_traning_set(sequences, w, _lambda, alpha):
 
     w_accumulator = np.zeros(MAX_STATES)
     w_current = w
+    dw = w
 
     i = 0
-    while np.linalg.norm(w_current, np.inf) > 0.1 and i < MAX_ITERATIONS:
+    while i < MAX_ITERATIONS:
         for sequence in sequences:
             X, z = sequence
             dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
             w_accumulator += dw
-        w_current = w_accumulator
-        i += 1
 
-    return w_accumulator
+        w_current = w_accumulator
+        if np.linalg.norm(w_current - w_accumulator, np.inf) < TOLERANCE:
+            break
+        i += 1
+    return w_current
 
 
 def get_traning_sets(traning_set_count=100, sequence_count=10):
@@ -51,21 +56,19 @@ def exp_1():
     errors = []
     trainsets = get_traning_sets()
 
+    w = np.zeros(MAX_STATES)
+
     for _lambda in lambdas:
         for trainset in trainsets:
-            w = np.zeros(MAX_STATES)
             w[:] = 0.5
             w[0] = 0
             w[1] = 1
 
-            i = 0
-
-            w += train_on_traning_set(trainset, w, _lambda, alpha)
-
+            w = train_on_traning_set(trainset, w, _lambda, alpha)
 
         predicted = np.array(w)
-        #predicted = np.insert(predicted, 0, 0.0)
-        #predicted = np.append(predicted, 1.0)
+        # predicted = np.insert(predicted, 0, 0.0)
+        # predicted = np.append(predicted, 1.0)
 
         #print "Predicted:"
         #print predicted

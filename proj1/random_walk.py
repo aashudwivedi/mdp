@@ -84,7 +84,8 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
 
         p_diff = p_next - p
 
-        e_next = X[i + 1] + lambda_val * e
+        e_next = X[i] + lambda_val * e
+
         dw += alpha * p_diff * e_next
 
         e = e_next
