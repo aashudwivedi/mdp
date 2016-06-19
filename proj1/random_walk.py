@@ -36,7 +36,7 @@ def get_numpy_episode_and_reward(episode):
     np_episode = np.zeros((len(episode), MAX_STATES))
 
     for i, state in enumerate(episode):
-        np_episode[i][state - 1] = 1
+        np_episode[i][state] = 1
 
     rewards = np.zeros(len(episode))
     rewards[-1] = reward
@@ -44,7 +44,9 @@ def get_numpy_episode_and_reward(episode):
 
 
 def get_new_episode():
-    return get_numpy_episode_and_reward(list(random_walk_generator()))
+    walk = list(random_walk_generator())
+    #print walk
+    return get_numpy_episode_and_reward(walk)
 
 
 def get_state_vector(current_state):
@@ -64,6 +66,7 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
         :return: updated weights
     """
     N = len(X)
+    #import ipdb; ipdb.set_trace()
 
     dw = np.zeros(total_states)
     e = np.zeros(total_states)
@@ -72,6 +75,7 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
         p = w.dot(X[i])
 
         x_next = X[i+1]
+
         p_next = z[-1] if i + 1 == N - 1 else w.dot(x_next)
 
         p_diff = p_next - p
@@ -83,3 +87,9 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
         e = e_next
 
     return dw
+
+
+if __name__ == '__main__':
+    X, z = get_new_episode()
+    w = np.zeros(MAX_STATES)
+    td_lambda(X, z , w, 1, 0.1)
