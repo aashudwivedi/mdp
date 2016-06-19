@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from random_walk import get_new_episode
 from random_walk import td_lambda
+from constants import MAX_STATES
 
-MAX_STATE_LEN = 7
-MAX_ITERATION = 100
+
+MAX_ITERATIONS = 100
 
 actual_z = [0, 1/6., 1/3., 1/2., 2/3., 5/6., 1.0]
 
@@ -17,11 +18,11 @@ def rmse(predictions, targets):
 def train_on_traning_set(sequences, w, _lambda, alpha):
     """offline training"""
 
-    w_accumulator = np.zeros(MAX_STATE_LEN)
+    w_accumulator = np.zeros(MAX_STATES)
 
     for sequence in sequences:
         X, z = sequence
-        dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
+        dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
         #print dw
         w_accumulator += dw
 
@@ -48,13 +49,13 @@ def exp_1():
 
     for _lambda in lambdas:
         for trainset in trainsets:
-            w = np.zeros(MAX_STATE_LEN)
+            w = np.zeros(MAX_STATES)
             w[:] = 0.5
             w[0] = 0
             w[1] = 1
 
             i = 0
-            while np.linalg.norm(w, np.inf) > 0.1 and i < MAX_ITERATION:
+            while np.linalg.norm(w, np.inf) > 0.1 and i < MAX_ITERATIONS:
                 w = train_on_traning_set(trainset, w, _lambda, alpha)
                 i += 1
 

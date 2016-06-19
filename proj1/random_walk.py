@@ -1,18 +1,6 @@
 import random
 import numpy as np
-
-import matplotlib.pyplot as plt
-import pandas as pd
-
-action_map = {
-    'left': -1,
-    'right': 1
-}
-
-FINAL_STATES = [0, 6]
-
-MAX_STATES = 7
-
+from constants import action_map, MAX_STATES, FINAL_STATES
 
 def char_state(i):
     return chr(ord('A') + i)
