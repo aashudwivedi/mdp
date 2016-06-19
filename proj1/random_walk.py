@@ -82,4 +82,4 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
 
         e = e_next
 
-    return w + dw
+    return dw

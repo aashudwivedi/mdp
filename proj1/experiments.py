@@ -19,14 +19,18 @@ def train_on_traning_set(sequences, w, _lambda, alpha):
     """offline training"""
 
     w_accumulator = np.zeros(MAX_STATES)
+    w_current = w
 
-    for sequence in sequences:
-        X, z = sequence
-        dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
-        #print dw
-        w_accumulator += dw
+    i = 0
+    while np.linalg.norm(w_current, np.inf) > 0.1 and i < MAX_ITERATIONS:
+        for sequence in sequences:
+            X, z = sequence
+            dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
+            w_accumulator += dw
+        w_current = w_accumulator
+        i += 1
 
-    return w_accumulator #/ len(sequence[0])
+    return w_accumulator
 
 
 def get_traning_sets(traning_set_count=100, sequence_count=10):
@@ -55,9 +59,9 @@ def exp_1():
             w[1] = 1
 
             i = 0
-            while np.linalg.norm(w, np.inf) > 0.1 and i < MAX_ITERATIONS:
-                w = train_on_traning_set(trainset, w, _lambda, alpha)
-                i += 1
+
+            w += train_on_traning_set(trainset, w, _lambda, alpha)
+
 
         predicted = np.array(w)
         #predicted = np.insert(predicted, 0, 0.0)
