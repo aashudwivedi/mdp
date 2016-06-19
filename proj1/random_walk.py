@@ -13,10 +13,6 @@ FINAL_STATES = [0, 6]
 
 MAX_STATES = 7
 
-MAX_STATES_ACTUAL = 5
-
-actual_z = [0, 1/6., 1/3., 1/2., 2/3., 5/6., 1.0]
-
 
 def char_state(i):
     return chr(ord('A') + i)
@@ -48,13 +44,13 @@ def random_walk_generator():
 
 def get_numpy_episode_and_reward(episode):
     reward = 0 if episode[-1] == 0 else 1
-    episode = episode[:-1]
-    np_episode = np.zeros((len(episode), MAX_STATES - 2))
+
+    np_episode = np.zeros((len(episode), MAX_STATES))
 
     for i, state in enumerate(episode):
         np_episode[i][state - 1] = 1
 
-    rewards = np.ravel(np.zeros((1, len(episode))))
+    rewards = np.zeros(len(episode))
     rewards[-1] = reward
     return np_episode, rewards
 
@@ -67,7 +63,7 @@ def get_state_vector(current_state):
     pass
 
 
-def td_lambda(X, z, w,  lambda_val, alpha, total_states=5):
+def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
     """
     Args:
         :param X: list of episode vectors

@@ -4,8 +4,8 @@ import pandas as pd
 from random_walk import get_new_episode
 from random_walk import td_lambda
 
-MAX_STATE_LEN = 5
-MAX_ITERATION = 1
+MAX_STATE_LEN = 7
+MAX_ITERATION = 100
 
 actual_z = [0, 1/6., 1/3., 1/2., 2/3., 5/6., 1.0]
 
@@ -22,7 +22,7 @@ def train_on_traning_set(sequences, w, _lambda, alpha):
     for sequence in sequences:
         X, z = sequence
         dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
-        print dw
+        #print dw
         w_accumulator += dw
 
     return w_accumulator #/ len(sequence[0])
@@ -38,7 +38,7 @@ def get_traning_sets(traning_set_count=100, sequence_count=10):
 
 def exp_1():
     _lambda = 0.3
-    alpha = 0.5
+    alpha = 0.1
 
     # generate training sets
     print "Generate trainsets"
@@ -51,6 +51,8 @@ def exp_1():
         for trainset in trainsets:
             w = np.zeros(MAX_STATE_LEN)
             w[:] = 0.5
+            w[0] = 0
+            w[1] = 1
 
             i = 0
             while np.linalg.norm(w, np.inf) > 0.1 and i < MAX_ITERATION:
@@ -58,11 +60,11 @@ def exp_1():
                 i += 1
 
         predicted = np.array(w)
-        predicted = np.insert(predicted, 0, 0.0)
-        predicted = np.append(predicted, 1.0)
+        #predicted = np.insert(predicted, 0, 0.0)
+        #predicted = np.append(predicted, 1.0)
 
-        print "Predicted:"
-        print predicted
+        #print "Predicted:"
+        #print predicted
 
         print "Actual"
         print actual_z
@@ -72,6 +74,7 @@ def exp_1():
 
         print "Final weights"
         print w
+
         errors.append(error)
 
     columns = ["Lambda", "ERROR"]
