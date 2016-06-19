@@ -8,12 +8,12 @@ from constants import MAX_STATES
 
 MAX_ITERATIONS = 1000
 
-TOLERANCE = 0.0001
+TOLERANCE = 0.000001
 
 actual_z = [0, 1/6., 1/3., 1/2., 2/3., 5/6., 1.0]
 
 
-def rmse(predictions, targets):
+def get_rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
 
@@ -33,14 +33,19 @@ def train_till_convergence(sequences, w, _lambda, alpha):
     return w_new
 
 
-def train_on_traning_set(sequences, w, _lambda, alpha):
+def train_on_traning_set(sequences, w, _lambda, alpha, online=False):
     """offline training"""
 
     w_accumulator = np.zeros(MAX_STATES)
 
     for sequence in sequences:
         X, z = sequence
-        dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
+
+        if online:
+            dw = td_lambda(X, z, w_accumulator, _lambda, alpha, MAX_STATES)
+        else:
+            dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
+
         w_accumulator += dw
 
     return w_accumulator
@@ -67,7 +72,7 @@ def plot_erros(lambdas, errors):
 
 
 def exp_1():
-    alpha = 0.1
+    alpha = 0.3
 
     # generate training sets
     print "Generate trainsets"
@@ -83,32 +88,50 @@ def exp_1():
 
     for _lambda in lambdas:
 
+        rmses = []
         for trainset in trainsets:
 
             w_precdicted = train_till_convergence(trainset, w_init, _lambda, alpha)
 
-        #predicted = np.array(w)
-        # predicted = np.insert(predicted, 0, 0.0)
-        # predicted = np.append(predicted, 1.0)
-
-        #print "Predicted:"
-        #print predicted
+            w_precdicted[0] = 0.0
+            w_precdicted[-1] = 1.0
+            rmse = get_rmse(w_precdicted, actual_z)
+            rmses.append(rmse)
 
         print "Actual"
         print actual_z
 
-        error = rmse(w_precdicted, actual_z)
-        print "Error", error
+        avg = np.array(rmses).mean()
+        #error = get_rmse(w_precdicted, actual_z)
+        print "Error", avg
 
         print "Final weights"
         print w_precdicted
 
-        errors.append(error)
+        errors.append(avg)
     return lambdas, errors
 
 
 def exp2():
-    pass
+    alpha_values = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    lambdas = [0, 0.3, 0.8, 1]
+
+    w_init = np.zeros(MAX_STATES)
+    w_init[:] = 0.5
+    w_init[0] = 0
+    w_init[1] = 1
+
+    trainsets = get_traning_sets()
+
+    for _lambda in lambdas:
+        for alpha in alpha_values:
+            for trainset in trainsets:
+                w_predicted = train_till_convergence(trainset, w_init, _lambda,
+                                                     alpha)
+                error = rmse(w_predicted, actual_z)
+
+
+
 
 
 if __name__ == '__main__':
