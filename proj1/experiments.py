@@ -22,7 +22,6 @@ def train_on_traning_set(sequences, w, _lambda, alpha):
 
     w_accumulator = np.zeros(MAX_STATES)
     w_current = w
-    dw = w
 
     i = 0
     while i < MAX_ITERATIONS:
@@ -46,44 +45,7 @@ def get_traning_sets(traning_set_count=100, sequence_count=10):
     return trainsets
 
 
-def exp_1():
-    alpha = 0.1
-
-    # generate training sets
-    print "Generate trainsets"
-
-    lambdas = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
-    errors = []
-    trainsets = get_traning_sets()
-
-    w = np.zeros(MAX_STATES)
-
-    for _lambda in lambdas:
-        for trainset in trainsets:
-            w[:] = 0.5
-            w[0] = 0
-            w[1] = 1
-
-            w = train_on_traning_set(trainset, w, _lambda, alpha)
-
-        predicted = np.array(w)
-        # predicted = np.insert(predicted, 0, 0.0)
-        # predicted = np.append(predicted, 1.0)
-
-        #print "Predicted:"
-        #print predicted
-
-        print "Actual"
-        print actual_z
-
-        error = rmse(predicted, actual_z)
-        print "Error", error
-
-        print "Final weights"
-        print w
-
-        errors.append(error)
-
+def plot_erros(lambdas, errors):
     columns = ["Lambda", "ERROR"]
     df = pd.DataFrame({"Lambda":lambdas, "ERROR":errors}).set_index("Lambda")
     ax = df.plot(title="Figure 3. TD(Lambda)", fontsize=12)
@@ -95,9 +57,50 @@ def exp_1():
     plt.show()
 
 
+def exp_1():
+    alpha = 0.1
+
+    # generate training sets
+    print "Generate trainsets"
+
+    lambdas = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+    errors = []
+    trainsets = get_traning_sets()
+
+    w_init = np.zeros(MAX_STATES)
+    w_init[:] = 0.5
+    w_init[0] = 0
+    w_init[1] = 1
+
+    for _lambda in lambdas:
+
+        for trainset in trainsets:
+
+            w_precdicted = train_on_traning_set(trainset, w_init, _lambda, alpha)
+
+        #predicted = np.array(w)
+        # predicted = np.insert(predicted, 0, 0.0)
+        # predicted = np.append(predicted, 1.0)
+
+        #print "Predicted:"
+        #print predicted
+
+        print "Actual"
+        print actual_z
+
+        error = rmse(w_precdicted, actual_z)
+        print "Error", error
+
+        print "Final weights"
+        print w_precdicted
+
+        errors.append(error)
+    return lambdas, errors
+
+
 def exp2():
     pass
 
 
 if __name__ == '__main__':
-    exp_1()
+    plot_erros(*exp_1())
