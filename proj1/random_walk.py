@@ -10,9 +10,19 @@ FINAL_STATES = [0, 6]
 
 MAX_STATES = 7
 
+MAX_STATES_ACTUAL = 5
+
 
 def char_state(i):
     return chr(ord('A') + i)
+
+
+def print_array(w):
+    print map(lambda x: "%.3f" % x, w)
+
+
+def rmse(predictions, targets):
+    return np.sqrt(((predictions - targets) ** 2).mean())
 
 
 def execute_random_action(current_state):
@@ -39,46 +49,102 @@ def get_numpy_episode_and_reward(episode):
     for i, state in enumerate(episode):
         np_episode[i][state - 1] = 1
 
-    return np_episode, reward
+    rewards = np.ravel(np.zeros((1, len(episode))))
+    rewards[-1] = reward
+    return np_episode, rewards
 
+
+def get_new_episode():
+    return get_numpy_episode_and_reward(list(random_walk_generator()))
 
 def get_state_vector(current_state):
     pass
 
 
-def td_lambda(episode_gen, alpha, lambda_val, gamma, iterations,
-              max_states=MAX_STATES):
+def td_lambda(X, z, w,  alpha, lambda_val, total_states=5):
     """
     Args:
-        :param episode_gen: generator for mdp
-        :param alpha: learning rate
-        :param lambda_val: lambda in the td-lambda
-        :param gamma: discount to be applied for the next step value func
-        :param iterations: number of episodes to be run
-        :param max_states number of maximum states [ always 7(0-6)]
+        :param X: list of episode vectors
+        :param z: rewards
+        :param w: current weights
+        :param alpha: alpha value
+        :param lambda_val: lambda
+        :param total_states: total number of states (always 5)
     Return:
-        :return:
+        :return: updated weights
     """
 
-    v = np.zeros((1, max_states))
-    v[:] = 0.5
-    v = v.ravel()
+    episode_len = X.shape[0]
+    e = np.zeros((episode_len, total_states))
 
-    # np_episode, reward = get_numpy_episode_and_reward(episode)
+    p = np.zeros(episode_len)
+    p_prev = w.dot(X[0])
 
-    for i in range(iterations):
-        episode = list(episode_gen())
-        s = episode[0]
-        for s_prime in episode[1:]:
-            reward = 1 if s_prime == 6 else 0
-            v[s] += alpha * (reward + gamma * v[s_prime] - v[s])
-            s = s_prime
-        v[s] += alpha * (reward + gamma * v[s_prime] - v[s])
-    print v
+    wt_sum = np.zeros(total_states)
+    w_old = w
+    for i in xrange(episode_len):
+        p[i] = w.dot(X[i])
+        p_diff = (p[i] - p_prev)
+        p_prev = p[i]
+
+        # etrace calculation
+        if i == 0:
+            try:
+                e[i] = X[i]
+            except ValueError:
+                import ipdb; ipdb.set_trace()
+        else:
+            e[i] = X[i] + lambda_val * e[i - 1]
+
+        delta_wt = alpha * p_diff * e[i]
+        w += delta_wt
+
+    wt_sum += alpha * (z[-1] - p_prev) * e[episode_len - 1]
+    return w_old + wt_sum
+
+
+def experiment_1(alpha):
+
+    actual_z = [0, 1/6., 1/3., 1/2., 2/3., 5/6., 1.0]
+
+    lambda_choices = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+    errors = []
+    for _lambda in lambda_choices:
+        for ti in range(100):
+            w = np.zeros(MAX_STATES_ACTUAL)
+            w_accumulator = np.zeros(MAX_STATES_ACTUAL)
+            s_count = 0
+            for si in range(10):
+                s_count += 1
+                X, z = get_new_episode()
+                # print X, z
+                wt_deltas = td_lambda(X, z, w, alpha, _lambda)
+                w_accumulator += wt_deltas
+                # print "B", w_accumulator
+            w += w_accumulator  # / s_count
+            print map(lambda x: "%.3f" % x, w)
+
+        predicted = np.array(w)
+        predicted = np.insert(predicted,0,0.0)
+        predicted = np.append(predicted,1.0)
+        print "Predicted"
+        print_array(predicted)
+
+        print "Actual"
+        print_array(actual_z)
+
+        error = rmse(predicted, actual_z)
+        print "Error", error
+
+        print "Final weights"
+        print_array(w)
+        errors.append(error)
 
 
 def main():
-    td_lambda(random_walk_generator, 0.15, 1, 1, 10000)
+    _lambda = 0.3
+    alpha = 0.4
+    experiment_1(alpha)
 
 
 if __name__ == '__main__':
