@@ -30,9 +30,11 @@ def train_on_traning_set(sequences, w, _lambda, alpha):
             dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
             w_accumulator += dw
 
-        w_current = w_accumulator
         if np.linalg.norm(w_current - w_accumulator, np.inf) < TOLERANCE:
             break
+
+        w_current = w_accumulator
+
         i += 1
     return w_current
 
