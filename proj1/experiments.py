@@ -13,15 +13,14 @@ def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
 
-def train_on_traning_set(sequences, w, _lambda, alpha, tolerance):
+def train_on_traning_set(sequences, w, _lambda, alpha):
     """offline training"""
 
     w_accumulator = np.zeros(MAX_STATE_LEN)
 
     for sequence in sequences:
         X, z = sequence
-        wt_deltas = td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
-        # w_accumulator += wt_deltas
+        w_accumulator += td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
 
     return w_accumulator
 
