@@ -73,8 +73,8 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=5):
         :param X: list of episode vectors
         :param z: rewards
         :param w: current weights
-        :param alpha: alpha value
         :param lambda_val: lambda
+        :param alpha: alpha value
         :param total_states: total number of states (always 5)
     Return:
         :return: updated weights

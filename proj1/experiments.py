@@ -13,9 +13,22 @@ def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
 
+def train_on_traning_set(sequences, w, _lambda, alpha, tolerance):
+    """offline training"""
+
+    w_accumulator = np.zeros(MAX_STATE_LEN)
+
+    for sequence in sequences:
+        X, z = sequence
+        wt_deltas = td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
+        # w_accumulator += wt_deltas
+
+    return w_accumulator
+
+
 def exp_1():
     _lambda = 0.3
-    alpha = 0.2
+    alpha = 0.5
 
     w = np.zeros(MAX_STATE_LEN)
 
@@ -27,35 +40,20 @@ def exp_1():
         sequences = [get_new_episode() for _ in range(10)]
         trainsets.append(sequences)
 
-    print "Run Experiment 1"
-
-    lambda_choices = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+    lambdas = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
     errors = []
 
-    for _lambda in lambda_choices:
-        for ti in range(100):
-            sequences = trainsets[ti]
+    for _lambda in lambdas:
+        for trainset in trainsets:
+            w[:] = 0.5
             w = np.zeros(MAX_STATE_LEN)
-            w_accumulator = np.zeros(MAX_STATE_LEN)
-            s_count = 0
-
-            for si in range(10):
-                s_count += 1
-                sequence = sequences[si]
-                # print "Sequence set", ti
-                # print sequence
-                X, z = sequence
-                #print X, z
-                wt_deltas = td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
-                w_accumulator += wt_deltas
-                # print "B", w_accumulator
-            w += w_accumulator  # / s_count
-            print map(lambda x: "%.3f" % x, w)
+            w += train_on_traning_set(trainset, w, _lambda, alpha)
 
         predicted = np.array(w)
-        predicted = np.insert(predicted,0,0.0)
-        predicted = np.append(predicted,1.0)
-        print "Predicted"
+        predicted = np.insert(predicted, 0, 0.0)
+        predicted = np.append(predicted, 1.0)
+
+        print "Predicted:"
         print predicted
 
         print "Actual"
@@ -69,12 +67,12 @@ def exp_1():
         errors.append(error)
 
     columns = ["Lambda", "ERROR"]
-    df = pd.DataFrame({"Lambda":lambda_choices, "ERROR":errors}).set_index("Lambda")
+    df = pd.DataFrame({"Lambda":lambdas, "ERROR":errors}).set_index("Lambda")
     ax = df.plot(title="Figure 3. TD(Lambda)", fontsize=12)
     ax.set_xlabel("Lambda")
     ax.set_ylabel("ERROR")
     fig = ax.get_figure()
-    plt.text(lambda_choices[-1]-0.2, errors[-1], "Widrow-Hoff")
+    plt.text(lambdas[-1]-0.2, errors[-1], "Widrow-Hoff")
     fig.savefig("figure3.png")
     plt.show()
 
