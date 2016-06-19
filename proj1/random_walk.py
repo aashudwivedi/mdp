@@ -94,7 +94,3 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=5):
         dw += alpha * p_diff * e[i]
 
     return w + dw
-
-
-if __name__ == '__main__':
-    main()
