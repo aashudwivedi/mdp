@@ -5,6 +5,7 @@ from random_walk import get_new_episode
 from random_walk import td_lambda
 
 MAX_STATE_LEN = 5
+MAX_ITERATION = 1
 
 actual_z = [0, 1/6., 1/3., 1/2., 2/3., 5/6., 1.0]
 
@@ -20,33 +21,41 @@ def train_on_traning_set(sequences, w, _lambda, alpha):
 
     for sequence in sequences:
         X, z = sequence
-        w_accumulator += td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
+        dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATE_LEN)
+        print dw
+        w_accumulator += dw
 
-    return w_accumulator
+    return w_accumulator #/ len(sequence[0])
+
+
+def get_traning_sets(traning_set_count=100, sequence_count=10):
+    trainsets = []
+    for ti in range(traning_set_count):
+        sequences = [get_new_episode() for _ in range(sequence_count)]
+        trainsets.append(sequences)
+    return trainsets
 
 
 def exp_1():
     _lambda = 0.3
     alpha = 0.5
 
-    w = np.zeros(MAX_STATE_LEN)
-
     # generate training sets
     print "Generate trainsets"
 
-    trainsets = []
-    for ti in range(100):
-        sequences = [get_new_episode() for _ in range(10)]
-        trainsets.append(sequences)
-
     lambdas = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
     errors = []
+    trainsets = get_traning_sets()
 
     for _lambda in lambdas:
         for trainset in trainsets:
-            w[:] = 0.5
             w = np.zeros(MAX_STATE_LEN)
-            w += train_on_traning_set(trainset, w, _lambda, alpha)
+            w[:] = 0.5
+
+            i = 0
+            while np.linalg.norm(w, np.inf) > 0.1 and i < MAX_ITERATION:
+                w = train_on_traning_set(trainset, w, _lambda, alpha)
+                i += 1
 
         predicted = np.array(w)
         predicted = np.insert(predicted, 0, 0.0)
