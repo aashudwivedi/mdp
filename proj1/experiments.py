@@ -17,26 +17,33 @@ def rmse(predictions, targets):
     return np.sqrt(((predictions - targets) ** 2).mean())
 
 
+def train_till_convergence(sequences, w, _lambda, alpha):
+    w_prev = w
+
+    i = 0
+    while i < MAX_ITERATIONS:
+        w_new = train_on_traning_set(sequences, w, _lambda, alpha)
+
+        if np.linalg.norm(w_new - w_prev, np.inf) < TOLERANCE:
+            break
+
+        w_prev = w_new
+
+        i += 1
+    return w_new
+
+
 def train_on_traning_set(sequences, w, _lambda, alpha):
     """offline training"""
 
     w_accumulator = np.zeros(MAX_STATES)
-    w_current = w
 
-    i = 0
-    while i < MAX_ITERATIONS:
-        for sequence in sequences:
-            X, z = sequence
-            dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
-            w_accumulator += dw
+    for sequence in sequences:
+        X, z = sequence
+        dw = td_lambda(X, z, w, _lambda, alpha, MAX_STATES)
+        w_accumulator += dw
 
-        if np.linalg.norm(w_current - w_accumulator, np.inf) < TOLERANCE:
-            break
-
-        w_current = w_accumulator
-
-        i += 1
-    return w_current
+    return w_accumulator
 
 
 def get_traning_sets(traning_set_count=100, sequence_count=10):
@@ -78,7 +85,7 @@ def exp_1():
 
         for trainset in trainsets:
 
-            w_precdicted = train_on_traning_set(trainset, w_init, _lambda, alpha)
+            w_precdicted = train_till_convergence(trainset, w_init, _lambda, alpha)
 
         #predicted = np.array(w)
         # predicted = np.insert(predicted, 0, 0.0)
