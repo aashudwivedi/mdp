@@ -6,6 +6,8 @@ action_map = {
     'right': 1
 }
 
+FINAL_STATES = [0, 6]
+
 MAX_STATES = 7
 
 
@@ -57,21 +59,26 @@ def td_lambda(episode_gen, alpha, lambda_val, gamma, iterations,
     Return:
         :return:
     """
-    # full episode
+
     v = np.zeros((1, max_states))
     v[:] = 0.5
-    episode = list(episode_gen())
-    np_episode, reward = get_numpy_episode_and_reward(episode)
+    v = v.ravel()
 
-    # todo: vectorize
+    # np_episode, reward = get_numpy_episode_and_reward(episode)
 
-    print np_episode, reward
-
+    for i in range(iterations):
+        episode = list(episode_gen())
+        s = episode[0]
+        for s_prime in episode[1:]:
+            reward = 1 if s_prime == 6 else 0
+            v[s] += alpha * (reward + gamma * v[s_prime] - v[s])
+            s = s_prime
+        v[s] += alpha * (reward + gamma * v[s_prime] - v[s])
+    print v
 
 
 def main():
-    td_lambda(random_walk_generator, 0.75, 1, 1, 1000)
-
+    td_lambda(random_walk_generator, 0.15, 1, 1, 10000)
 
 
 if __name__ == '__main__':
