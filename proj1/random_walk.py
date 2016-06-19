@@ -107,8 +107,9 @@ def experiment_1(alpha):
     lambda_choices = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
     errors = []
     for _lambda in lambda_choices:
-        for ti in range(100):
+        for ti in range(1000):
             w = np.zeros(MAX_STATES_ACTUAL)
+            w[:] = 0.5
             w_accumulator = np.zeros(MAX_STATES_ACTUAL)
             s_count = 0
             for si in range(10):
