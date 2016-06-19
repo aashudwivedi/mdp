@@ -37,7 +37,6 @@ def get_traning_sets(traning_set_count=100, sequence_count=10):
 
 
 def exp_1():
-    _lambda = 0.3
     alpha = 0.1
 
     # generate training sets
