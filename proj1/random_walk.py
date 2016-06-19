@@ -76,12 +76,15 @@ def td_lambda(X, z, w,  lambda_val, alpha, total_states=MAX_STATES):
 
         x_next = X[i+1]
 
-        p_next = z[-1] if i + 1 == N - 1 else w.dot(x_next)
+        if i + 1 == N - 1:
+            p_next = z[-1]
+        else:
+            p_next = w.dot(x_next)
+
 
         p_diff = p_next - p
 
-        e_next = X[i] + lambda_val * e
-
+        e_next = X[i + 1] + lambda_val * e
         dw += alpha * p_diff * e_next
 
         e = e_next
