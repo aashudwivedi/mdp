@@ -1,5 +1,6 @@
 import mdptoolbox
 import numpy as np
+import scipy.stats
 
 # number of states required for two decimal precision
 STATE_COUNT = 100
@@ -34,7 +35,9 @@ def get_probability(action, s_index, s_prime_index, movement_mean, movement_std,
     mean = movement_mean[terrain][action]
     std = movement_std[terrain][action]
     #TODO: calculate probability from mean and std
-    return 0
+    dist = (s_prime_index - s_index) / 100
+    #z_score = (dist - mean) / std
+    return scipy.stats.norm(mean, std).pdf(dist)
 
 
 def get_transition_probability_matrix(action_count, terrain_start_points,
@@ -48,7 +51,7 @@ def get_transition_probability_matrix(action_count, terrain_start_points,
     :return:
     """
 
-    P = np.zeoros((action_count, STATE_COUNT, STATE_COUNT))
+    P = np.zeros((action_count, STATE_COUNT, STATE_COUNT))
 
     for action in xrange(action_count):
         for s in xrange(STATE_COUNT):
@@ -57,7 +60,6 @@ def get_transition_probability_matrix(action_count, terrain_start_points,
                                                         movement_mean,
                                                         movement_std,
                                                         terrain_start_points)
-
     return P
 
 
@@ -72,10 +74,21 @@ def get_rewards():
     return R
 
 
-def solve():
-    P = get_transition_probability_matrix()
+def solve(num_action, terrain_start_points, movement_mean, movement_std,
+          sample_locs):
+    P = get_transition_probability_matrix(action_count=num_action,
+                                          terrain_start_points=terrain_start_points,
+                                          terrain_types=[0, 1, 2, 3, 4],
+                                          movement_mean=movement_mean,
+                                          movement_std=movement_std)
+    print 'done with the probability matrix'
+
     R = get_rewards()
-    
+
+    print 'got the reward'
+    #import ipdb; ipdb.set_trace()
+    result = mdptoolbox.mdp.QLearning(P, R, 0.1)
+    print result
 
 
 
@@ -98,6 +111,8 @@ def main():
         [0.064,0.053,0.051,0.075,0.087,0.091,0.048,0.047]]
 
     sampleLocations=[0.67,0.69,0.74,0.77,0.85,0.89]
+
+    print solve(numActions, terrainStartPoint, movementMean, movementSD, sampleLocations)
 
 
 if __name__ == '__main__':
