@@ -20,12 +20,6 @@ def get_terrain_type_for_state(start_points, state):
 def get_mean_to_state(current_state, mean):
     final_state = current_state + mean
     return final_state
-    if final_state > 1:
-        return 1
-    if final_state < 0:
-        return 0
-    else:
-        return final_state
 
 
 def get_normalized_probability_dist(mean, std, samples):
@@ -90,10 +84,18 @@ def get_rewards():
     return R
 
 
-def solve(num_action, terrain_start_points, movement_mean, movement_std,
-          sample_locs):
+def solve(movement_mean, movement_std, sample_locs):
+
+    num_action = 8  # always fixed
+    terrain_start_points = [0.0, 0.2, 0.4, 0.6, 0.8, 1]  # always fixed
+
+    terrain_start_pts = descretize(terrain_start_points)
+    movement_mean = np.asarray(movement_mean, dtype=float) * 100
+    movement_std = np.asarray(movement_std, dtype=float) * 100
+    sample_locs = descretize(sample_locs)
+
     P = get_transition_probability_matrix(action_count=num_action,
-                                          terrain_start_points=terrain_start_points,
+                                          terrain_start_points=terrain_start_pts,
                                           terrain_types=[0, 1, 2, 3, 4],
                                           movement_mean=movement_mean,
                                           movement_std=movement_std)
@@ -101,7 +103,10 @@ def solve(num_action, terrain_start_points, movement_mean, movement_std,
 
     learner = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
     learner.run()
-    return learner.policy
+    policy = np.asarray(learner.policy, dtype=int)
+    sample_policy_str = ','.join([str(p) for p in policy[sample_locs].tolist()])
+
+    print '{%s}' % sample_policy_str
 
 
 def descretize(x, precision=100):
@@ -110,35 +115,35 @@ def descretize(x, precision=100):
     return (np.asarray(x, dtype=float) * precision).astype(int)
 
 
+def get_list_from_string(string):
+    string = string.replace('{', '[')
+    string = string.replace('}', ']')
+    return eval(string)
+
+
+def process_test_case(*args):
+    return [get_list_from_string(arg) for arg in args]
+
+
+def read_input_and_solve():
+    f = open('input.txt')
+
+    while True:
+        movement_mean_str = f.readline()
+        movement_std_str = f.readline()
+        sample_location_str = f.readline()
+        _  = f.readline() # blank line between test cases
+
+        if movement_mean_str == '':
+            return
+
+        solve(*process_test_case(movement_mean_str, movement_std_str,
+                                 sample_location_str))
+
+
 def main():
-    numActions = 8
-    terrainStartPoint = [0.0, 0.2, 0.4, 0.6, 0.8, 1]
+    read_input_and_solve()
 
-    movementMean=[
-        [-0.002,0.049,0.076,0.008,0.161,0.175,0.124,0.159],
-        [0.129,0.169,0.168,0.059,-0.047,0.142,-0.07,0.188],
-        [-0.052,0.099,-0.067,0.172,0.081,-0.095,0.121,-0.095],
-        [0.142,0.025,-0.055,0.187,-0.099,0.125,0.056,0.024],
-        [-0.072,0.125,0.076,0.07,-0.069,0.032,-0.044,-0.094]]
-
-    movementSD=[
-        [0.077,0.062,0.064,0.042,0.057,0.07,0.063,0.055],
-        [0.058,0.042,0.077,0.089,0.052,0.074,0.053,0.088],
-        [0.057,0.071,0.051,0.063,0.072,0.075,0.056,0.042],
-        [0.062,0.058,0.063,0.087,0.078,0.089,0.046,0.042],
-        [0.064,0.053,0.051,0.075,0.087,0.091,0.048,0.047]]
-
-    sampleLocations=[0.67,0.69,0.74,0.77,0.85,0.89]
-
-    terrainStartPoint = descretize(terrainStartPoint)
-    movementMean = np.asarray(movementMean, dtype=float) * 100
-    movementSD = np.asarray(movementSD, dtype=float) * 100
-    sampleLocations = descretize(sampleLocations)
-
-    policy = solve(numActions, terrainStartPoint, movementMean, movementSD, sampleLocations)
-    policy = np.asarray(policy, dtype=int)
-
-    print policy[sampleLocations]
 
 if __name__ == '__main__':
     main()
