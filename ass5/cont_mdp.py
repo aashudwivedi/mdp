@@ -4,11 +4,11 @@ import scipy.stats
 
 # number of states required for two decimal precision
 STATE_COUNT = 101
+PRECESION = 100
 terrain_types = [0, 1, 2, 3, 4]  # always fixed
 
 
 def get_terrain_type_for_state(start_points, state):
-
     for i in range(len(start_points) - 1):
         if start_points[i] <= state < start_points[i + 1]:
             return terrain_types[i]
@@ -41,13 +41,13 @@ def get_probabilities(action, s, movement_mean, movement_std,
     """
     terrain = get_terrain_type_for_state(terrain_start_points, s)
 
-    mean = get_mean_to_state(s, movement_mean[terrain][action])
+    mean_state = get_mean_to_state(s, movement_mean[terrain][action])
     std = movement_std[terrain][action]
 
     s_primes = np.arange(0, STATE_COUNT)
 
     # normalize the probabilities
-    probs = get_normalized_probability_dist(mean, std, s_primes)
+    probs = get_normalized_probability_dist(mean_state, std, s_primes)
     #import ipdb; ipdb.set_trace()
     return probs
 
@@ -80,7 +80,7 @@ def get_rewards():
     """
     # one last state results in the reward of 1000, -1 for every other state
     R = np.ones(STATE_COUNT) * -1
-    R[-1] = 1000
+    R[-1] = 10000
     return R
 
 
@@ -90,8 +90,8 @@ def solve(movement_mean, movement_std, sample_locs):
     terrain_start_points = [0.0, 0.2, 0.4, 0.6, 0.8, 1]  # always fixed
 
     terrain_start_pts = descretize(terrain_start_points)
-    movement_mean = np.asarray(movement_mean, dtype=float) * 100
-    movement_std = np.asarray(movement_std, dtype=float) * 100
+    movement_mean = np.asarray(movement_mean, dtype=float) * PRECESION
+    movement_std = np.asarray(movement_std, dtype=float) * PRECESION
     sample_locs = descretize(sample_locs)
 
     P = get_transition_probability_matrix(action_count=num_action,
@@ -109,7 +109,7 @@ def solve(movement_mean, movement_std, sample_locs):
     print 'bestActions={%s}' % sample_policy_str
 
 
-def descretize(x, precision=100):
+def descretize(x, precision=PRECESION):
     """ Convert a array of floats between 0-1 into a array of int between 0-100
     """
     return (np.asarray(x, dtype=float) * precision).astype(int)
