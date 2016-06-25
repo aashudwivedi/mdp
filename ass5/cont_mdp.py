@@ -4,6 +4,7 @@ import scipy.stats
 
 # number of states required for two decimal precision
 STATE_COUNT = 100
+terrain_types = [0, 1, 2, 3, 4]  # always fixed
 
 
 def index_to_state(index):
@@ -15,8 +16,6 @@ def state_to_index(state):
 
 
 def get_terrain_type_for_state(start_points, state):
-    start_points.append(1)
-    terrain_types = [0, 1, 2, 3, 4] # always fixed
 
     for i in range(len(start_points) - 1):
         if start_points[i] <= state < start_points[i + 1]:
@@ -26,18 +25,29 @@ def get_terrain_type_for_state(start_points, state):
     return 4
 
 
-def get_probability(action, s_index, s_prime_index, movement_mean, movement_std,
-                    terrain_start_points):
+def get_probabilities(action, s_index, movement_mean, movement_std,
+                      terrain_start_points):
+    """
+    calculates probabilities for all the states s_prime
+    :param action:
+    :param s_index:
+    :param movement_mean:
+    :param movement_std:
+    :param terrain_start_points:
+    :return:
+    """
 
     s = index_to_state(s_index)
     terrain = get_terrain_type_for_state(terrain_start_points, s)
 
     mean = movement_mean[terrain][action]
     std = movement_std[terrain][action]
-    #TODO: calculate probability from mean and std
-    dist = (s_prime_index - s_index) / 100
-    #z_score = (dist - mean) / std
-    return scipy.stats.norm(mean, std).pdf(dist)
+
+    s_primes = np.arange(0, 100)
+
+    probs = scipy.stats.norm(mean, std).pdf(s_primes)
+    probs = probs / probs.sum()
+    return probs
 
 
 def get_transition_probability_matrix(action_count, terrain_start_points,
@@ -55,11 +65,9 @@ def get_transition_probability_matrix(action_count, terrain_start_points,
 
     for action in xrange(action_count):
         for s in xrange(STATE_COUNT):
-            for s_prime in xrange(STATE_COUNT):
-                P[action][s][s_prime] = get_probability(action, s, s_prime,
-                                                        movement_mean,
-                                                        movement_std,
-                                                        terrain_start_points)
+                P[action][s] = get_probabilities(action, s, movement_mean,
+                                                 movement_std,
+                                                 terrain_start_points)
     return P
 
 
@@ -91,10 +99,15 @@ def solve(num_action, terrain_start_points, movement_mean, movement_std,
     print result
 
 
+def descretize(x, precision=100):
+    """ Convert a array of floats between 0-1 into a array of int between 0-100
+    """
+    return (np.asarray(x, dtype=float) * precision).astype(int)
+
 
 def main():
     numActions = 8
-    terrainStartPoint = [0.0, 0.2, 0.4, 0.6, 0.8]
+    terrainStartPoint = [0.0, 0.2, 0.4, 0.6, 0.8, 1]
 
     movementMean=[
         [-0.002,0.049,0.076,0.008,0.161,0.175,0.124,0.159],
@@ -111,6 +124,11 @@ def main():
         [0.064,0.053,0.051,0.075,0.087,0.091,0.048,0.047]]
 
     sampleLocations=[0.67,0.69,0.74,0.77,0.85,0.89]
+
+    terrainStartPoint = descretize(terrainStartPoint)
+    movementMean = descretize(movementMean, 1000)
+    movementSD = descretize(movementSD, 1000)
+    sampleLocations = descretize(sampleLocations)
 
     print solve(numActions, terrainStartPoint, movementMean, movementSD, sampleLocations)
 
