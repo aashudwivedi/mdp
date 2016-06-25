@@ -118,8 +118,10 @@ def main():
     movementSD = descretize(movementSD, 1000)
     sampleLocations = descretize(sampleLocations)
 
-    print solve(numActions, terrainStartPoint, movementMean, movementSD, sampleLocations)
+    policy = solve(numActions, terrainStartPoint, movementMean, movementSD, sampleLocations)
+    policy = np.asarray(policy, dtype=int)
 
+    print policy[sampleLocations]
 
 if __name__ == '__main__':
     main()
