@@ -106,7 +106,7 @@ def solve(movement_mean, movement_std, sample_locs):
     policy = np.asarray(learner.policy, dtype=int)
     sample_policy_str = ','.join([str(p) for p in policy[sample_locs].tolist()])
 
-    print '{%s}' % sample_policy_str
+    print 'bestActions={%s}' % sample_policy_str
 
 
 def descretize(x, precision=100):
@@ -126,7 +126,7 @@ def process_test_case(*args):
 
 
 def read_input_and_solve():
-    f = open('input.txt')
+    f = open('input2.txt')
 
     while True:
         movement_mean_str = f.readline()
