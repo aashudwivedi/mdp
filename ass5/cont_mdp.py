@@ -89,14 +89,10 @@ def solve(num_action, terrain_start_points, movement_mean, movement_std,
                                           terrain_types=[0, 1, 2, 3, 4],
                                           movement_mean=movement_mean,
                                           movement_std=movement_std)
-    print 'done with the probability matrix'
-
     R = get_rewards()
 
-    print 'got the reward'
-    #import ipdb; ipdb.set_trace()
     result = mdptoolbox.mdp.QLearning(P, R, 0.1)
-    print result
+    return result
 
 
 def descretize(x, precision=100):
