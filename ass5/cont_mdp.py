@@ -126,7 +126,7 @@ def process_test_case(*args):
 
 
 def read_input_and_solve():
-    f = open('input2.txt')
+    f = open('input.txt')
 
     while True:
         movement_mean_str = f.readline()
