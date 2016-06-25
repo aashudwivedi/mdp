@@ -91,8 +91,10 @@ def solve(num_action, terrain_start_points, movement_mean, movement_std,
                                           movement_std=movement_std)
     R = get_rewards()
 
-    result = mdptoolbox.mdp.QLearning(P, R, 0.1)
-    return result
+    learner = mdptoolbox.mdp.QLearning(P, R, 0.1)
+    learner.run()
+    return learner.Q
+
 
 
 def descretize(x, precision=100):
