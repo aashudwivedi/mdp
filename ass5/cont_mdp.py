@@ -3,7 +3,7 @@ import numpy as np
 import scipy.stats
 
 # number of states required for two decimal precision
-STATE_COUNT = 100
+STATE_COUNT = 101
 terrain_types = [0, 1, 2, 3, 4]  # always fixed
 
 
@@ -101,7 +101,7 @@ def solve(movement_mean, movement_std, sample_locs):
                                           movement_std=movement_std)
     R = get_rewards()
 
-    learner = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
+    learner = mdptoolbox.mdp.ValueIteration(P, R, 0.99)
     learner.run()
     policy = np.asarray(learner.policy, dtype=int)
     sample_policy_str = ','.join([str(p) for p in policy[sample_locs].tolist()])
