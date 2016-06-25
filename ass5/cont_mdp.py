@@ -7,14 +7,6 @@ STATE_COUNT = 100
 terrain_types = [0, 1, 2, 3, 4]  # always fixed
 
 
-def index_to_state(index):
-    return index / 100
-
-
-def state_to_index(state):
-    return state * 100
-
-
 def get_terrain_type_for_state(start_points, state):
 
     for i in range(len(start_points) - 1):
@@ -25,7 +17,7 @@ def get_terrain_type_for_state(start_points, state):
     return 4
 
 
-def get_probabilities(action, s_index, movement_mean, movement_std,
+def get_probabilities(action, s, movement_mean, movement_std,
                       terrain_start_points):
     """
     calculates probabilities for all the states s_prime
@@ -36,16 +28,15 @@ def get_probabilities(action, s_index, movement_mean, movement_std,
     :param terrain_start_points:
     :return:
     """
-
-    s = index_to_state(s_index)
     terrain = get_terrain_type_for_state(terrain_start_points, s)
 
     mean = movement_mean[terrain][action]
     std = movement_std[terrain][action]
 
-    s_primes = np.arange(0, 100)
+    s_primes = np.arange(0, STATE_COUNT)
 
     probs = scipy.stats.norm(mean, std).pdf(s_primes)
+    # normalize the probabilities
     probs = probs / probs.sum()
     return probs
 
@@ -91,10 +82,9 @@ def solve(num_action, terrain_start_points, movement_mean, movement_std,
                                           movement_std=movement_std)
     R = get_rewards()
 
-    learner = mdptoolbox.mdp.QLearning(P, R, 0.1)
+    learner = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
     learner.run()
-    return learner.Q
-
+    return learner.policy
 
 
 def descretize(x, precision=100):
