@@ -17,6 +17,23 @@ def get_terrain_type_for_state(start_points, state):
     return 4
 
 
+def get_mean_to_state(current_state, mean):
+    final_state = current_state + mean
+    return final_state
+    if final_state > 1:
+        return 1
+    if final_state < 0:
+        return 0
+    else:
+        return final_state
+
+
+def get_normalized_probability_dist(mean, std, samples):
+    probs = scipy.stats.norm(mean, std).pdf(samples)
+    # normalize the probabilities
+    return probs / probs.sum()
+
+
 def get_probabilities(action, s, movement_mean, movement_std,
                       terrain_start_points):
     """
@@ -30,14 +47,14 @@ def get_probabilities(action, s, movement_mean, movement_std,
     """
     terrain = get_terrain_type_for_state(terrain_start_points, s)
 
-    mean = movement_mean[terrain][action]
+    mean = get_mean_to_state(s, movement_mean[terrain][action])
     std = movement_std[terrain][action]
 
     s_primes = np.arange(0, STATE_COUNT)
 
-    probs = scipy.stats.norm(mean, std).pdf(s_primes)
     # normalize the probabilities
-    probs = probs / probs.sum()
+    probs = get_normalized_probability_dist(mean, std, s_primes)
+    #import ipdb; ipdb.set_trace()
     return probs
 
 
@@ -114,8 +131,8 @@ def main():
     sampleLocations=[0.67,0.69,0.74,0.77,0.85,0.89]
 
     terrainStartPoint = descretize(terrainStartPoint)
-    movementMean = descretize(movementMean, 1000)
-    movementSD = descretize(movementSD, 1000)
+    movementMean = np.asarray(movementMean, dtype=float) * 100
+    movementSD = np.asarray(movementSD, dtype=float) * 100
     sampleLocations = descretize(sampleLocations)
 
     policy = solve(numActions, terrainStartPoint, movementMean, movementSD, sampleLocations)
