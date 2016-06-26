@@ -1,11 +1,15 @@
 import mdptoolbox
 import numpy as np
 import scipy.stats
+import random
 
 # number of states required for two decimal precision
 STATE_COUNT = 101
 PRECESION = 100
+NUM_ACTIONS = 8  # always fixed
 terrain_types = [0, 1, 2, 3, 4]  # always fixed
+TERRAIN_START_POINTS = [0.0, 0.2, 0.4, 0.6, 0.8, 1]  # always fixed
+NUM_SAMPLE_ITERATIONS = 5000
 
 
 def get_terrain_type_for_state(start_points, state):
@@ -23,7 +27,11 @@ def get_mean_to_state(current_state, mean):
 
 
 def get_normalized_probability_dist(mean, std, samples):
-    probs = scipy.stats.norm(mean, std).pdf(samples)
+    if std != 0:
+        probs = scipy.stats.norm(mean, std).cdf(samples)
+    else:
+        probs = np.zeros(len(samples))
+        probs[mean] = 1
     # normalize the probabilities
     return probs / probs.sum()
 
@@ -48,13 +56,13 @@ def get_probabilities(action, s, movement_mean, movement_std,
 
     # normalize the probabilities
     probs = get_normalized_probability_dist(mean_state, std, s_primes)
-    #import ipdb; ipdb.set_trace()
+    # if np.count_nonzero(np.isnan(probs)) > 0:
+    #     import ipdb; ipdb.set_trace()
     return probs
 
 
-def get_transition_probability_matrix(action_count, terrain_start_points,
-                                      terrain_types, movement_mean,
-                                      movement_std):
+def get_transition_probability_matrix(terrain_start_points,
+                                      movement_mean, movement_std):
     """
     Transition probability is a 3d matrix with
     dimen1 representing action,
@@ -63,9 +71,9 @@ def get_transition_probability_matrix(action_count, terrain_start_points,
     :return:
     """
 
-    P = np.zeros((action_count, STATE_COUNT, STATE_COUNT))
+    P = np.zeros((NUM_ACTIONS, STATE_COUNT, STATE_COUNT))
 
-    for action in xrange(action_count):
+    for action in xrange(NUM_ACTIONS):
         for s in xrange(STATE_COUNT):
                 P[action][s] = get_probabilities(action, s, movement_mean,
                                                  movement_std,
@@ -86,22 +94,17 @@ def get_rewards():
 
 def solve(movement_mean, movement_std, sample_locs):
 
-    num_action = 8  # always fixed
-    terrain_start_points = [0.0, 0.2, 0.4, 0.6, 0.8, 1]  # always fixed
-
-    terrain_start_pts = descretize(terrain_start_points)
+    terrain_start_pts = descretize(TERRAIN_START_POINTS)
     movement_mean = np.asarray(movement_mean, dtype=float) * PRECESION
     movement_std = np.asarray(movement_std, dtype=float) * PRECESION
     sample_locs = descretize(sample_locs)
 
-    P = get_transition_probability_matrix(action_count=num_action,
-                                          terrain_start_points=terrain_start_pts,
-                                          terrain_types=[0, 1, 2, 3, 4],
+    P = get_sampled_probabilities(terrain_start_points=terrain_start_pts,
                                           movement_mean=movement_mean,
                                           movement_std=movement_std)
     R = get_rewards()
 
-    learner = mdptoolbox.mdp.ValueIteration(P, R, 0.99)
+    learner = mdptoolbox.mdp.ValueIteration(P, R, 0.99, skip_check=True)
     learner.run()
     policy = np.asarray(learner.policy, dtype=int)
     sample_policy_str = ','.join([str(p) for p in policy[sample_locs].tolist()])
@@ -126,7 +129,7 @@ def process_test_case(*args):
 
 
 def read_input_and_solve():
-    f = open('input.txt')
+    f = open('input3.txt')
 
     while True:
         movement_mean_str = f.readline()
@@ -139,6 +142,47 @@ def read_input_and_solve():
 
         solve(*process_test_case(movement_mean_str, movement_std_str,
                                  sample_location_str))
+
+
+def get_next_state(s, dist):
+    next_state = s + dist
+    if next_state < 0:
+        return 0
+    if next_state > STATE_COUNT - 1:
+        return STATE_COUNT - 1
+    else:
+        return int(next_state)
+
+
+def get_sampled_probabilities(terrain_start_points, movement_mean, movement_std):
+    samples = np.zeros((NUM_ACTIONS, STATE_COUNT, STATE_COUNT))
+
+    for i in range(NUM_SAMPLE_ITERATIONS):
+        for action in range(NUM_ACTIONS):
+            for state in range(STATE_COUNT):
+                terrain = get_terrain_type_for_state(terrain_start_points, state)
+                mean = movement_mean[terrain][action]
+                sigma = movement_std[terrain][action]
+
+                movement = random.gauss(mean, sigma)
+                s_prime = get_next_state(state, movement)
+                samples[action][state][s_prime] += 1
+
+
+    #import ipdb; ipdb.set_trace()
+    P = np.zeros((NUM_ACTIONS, STATE_COUNT, STATE_COUNT))
+    for action in range(NUM_ACTIONS):
+        for state in range(STATE_COUNT):
+            r = samples[action, state, :]
+            try:
+                #import ipdb; ipdb.set_trace()
+                probs = r / r.sum()
+            except ValueError:
+                import ipdb; ipdb.set_trace()
+                print 'error'
+            P[action, state, :] = probs
+
+    return P
 
 
 def main():
