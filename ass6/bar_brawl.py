@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def string_to_np(string):
     string = string.replace('{', '[')
     string = string.replace('}', ']')
@@ -8,7 +9,7 @@ def string_to_np(string):
 
 
 def process_test_case(patron_count, establishment, fight_occured):
-    patron_count = int(patron_count)
+    pass
 
 
 def read_input_and_solve():
