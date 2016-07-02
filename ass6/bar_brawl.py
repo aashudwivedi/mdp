@@ -21,7 +21,6 @@ def read_input_and_solve():
             print '--' + str(i) + '--'
             process_test_case(patron_count, establishment, fight_occured)
 
-
             i += 1
             f.readline()
     except ValueError:
@@ -49,6 +48,8 @@ def process_test_case(patron_count, establishments, fight_occured):
     hypothesises = [(x, y) for x in xrange(patron_count)
                     for y in range(patron_count) if x != y]
 
+    results = []
+
     for e_index, e in enumerate(establishments):
         outputs = np.zeros(len(hypothesises))
 
@@ -66,13 +67,15 @@ def process_test_case(patron_count, establishments, fight_occured):
             outputs[h_index] = output
 
         if np.all(outputs == 0):
-            print 'NOFIGHT'
+            results.append('NO FIGHT')
         elif np.all(outputs == 1):
-            print 'FIGHT'
+            results.append('FIGHT')
         else:
-            print "I DON'T KNOW"
+            results.append("I DON'T KNOW")
             wrong_hs = np.where(outputs != fight_occured[e_index])[0]
             hypothesises = [h for i, h in enumerate(hypothesises) if i not in wrong_hs]
+
+    print ','.join(results)
 
 
 def print_output(str):
