@@ -4,8 +4,8 @@ import scipy.stats
 import random
 
 # number of states required for two decimal precision
-STATE_COUNT = 101
-PRECESION = 100
+STATE_COUNT = 1001
+PRECESION = 1000
 NUM_ACTIONS = 8  # always fixed
 terrain_types = [0, 1, 2, 3, 4]  # always fixed
 TERRAIN_START_POINTS = [0.0, 0.2, 0.4, 0.6, 0.8, 1]  # always fixed
