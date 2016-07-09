@@ -3,9 +3,11 @@ import mdptoolbox
 
 
 def process_test_case(state_count, action_count, T, R, gamma):
-    mdp = mdptoolbox.mdp.ValueIteration(T, R, gamma)
+    mdp = mdptoolbox.mdp.ValueIteration(T, R, gamma, epsilon=0.0000000000000001)
     mdp.run()
-    print ', '.join([str(x) for x in mdp.V])
+
+    print mdp.iter
+    print ', '.join(['%.3f' % x for x in mdp.V])
 
 
 def string_to_np(string):
@@ -16,7 +18,7 @@ def string_to_np(string):
 
 
 def read_input_and_solve():
-    f = open('input.txt')
+    f = open('input2.txt')
 
     try:
         i = 0
@@ -31,6 +33,9 @@ def read_input_and_solve():
             R = np.swapaxes(R, 0, 1)
 
             print '-' * 10 + 'test case ' + str(i) + '--' * 10
+
+            print 'numStates = %s' % str(state_count)
+            print 'numActions = %s' % str(action_count)
             process_test_case(state_count, action_count, T, R, gamma)
 
             i += 1
